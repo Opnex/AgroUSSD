@@ -1,74 +1,53 @@
-from src.utils.data_handler import read_json, write_json
-import datetime
-
-MARKET_PRICES_FILE = "data/market_prices.json"
+from utils.data_handler import read_json, write_json
 
 class MarketService:
     def __init__(self):
-        self.market_prices = self.load_prices()
+        self.market_prices_file = "data/market_prices.json"
+        self._initialize_market_prices()
 
-    def load_prices(self):
-        return read_json(MARKET_PRICES_FILE)
+    def _initialize_market_prices(self):
+        """Initialize market prices with sample data if file doesn't exist"""
+        prices = read_json(self.market_prices_file)
+        if not prices:
+            sample_prices = {
+                "Rice": 450.00,
+                "Maize": 320.00,
+                "Wheat": 380.00,
+                "Cassava": 180.00,
+                "Yam": 250.00,
+                "Plantain": 200.00,
+                "Tomato": 400.00,
+                "Onion": 350.00,
+                "Pepper": 500.00,
+                "Beans": 280.00,
+                "Groundnut": 600.00,
+                "Soybean": 450.00,
+                "Sorghum": 300.00,
+                "Millet": 320.00,
+                "Cocoa": 1200.00,
+                "Coffee": 800.00,
+                "Palm Oil": 400.00,
+                "Coconut": 150.00
+            }
+            write_json(self.market_prices_file, sample_prices)
 
-    def save_prices(self):
-        write_json(MARKET_PRICES_FILE, self.market_prices)
+    def get_market_prices(self):
+        """Get current market prices"""
+        return read_json(self.market_prices_file)
 
-    def get_current_price(self, product_name, location):
-        """
-        Return the latest price for a product at a specific location.
-        """
-        location_data = self.market_prices.get(location, {})
-        product_prices = location_data.get(product_name, [])
-        if not product_prices:
-            return None  # No data
+    def get_crop_price(self, crop_type):
+        """Get price for a specific crop"""
+        prices = self.get_market_prices()
+        return prices.get(crop_type, 0.0)
 
-        # Assuming prices stored as list of dict with 'date' and 'price'
-        latest_record = max(product_prices, key=lambda x: x["date"])
-        return latest_record["price"]
+    def update_crop_price(self, crop_type, new_price):
+        """Update price for a specific crop"""
+        prices = self.get_market_prices()
+        prices[crop_type] = new_price
+        write_json(self.market_prices_file, prices)
 
-    def compare_prices(self, product_name):
-        """
-        Compare prices for a product across all locations.
-        Returns dict with location: latest_price.
-        """
-        comparison = {}
-        for location, products in self.market_prices.items():
-            prices = products.get(product_name, [])
-            if prices:
-                latest = max(prices, key=lambda x: x["date"])
-                comparison[location] = latest["price"]
-        return comparison
-
-    def get_historical_trends(self, product_name, location, days=7):
-        """
-        Return price trend data for product and location for last 'days' days.
-        """
-        location_data = self.market_prices.get(location, {})
-        product_prices = location_data.get(product_name, [])
-
-        # Filter prices for last 'days'
-        cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-        filtered = [p for p in product_prices if p["date"] >= cutoff]
-        # Sort by date ascending
-        filtered.sort(key=lambda x: x["date"])
-
-        return filtered
-
-    def add_price_record(self, product_name, location, price, date=None):
-        """
-        Add a new price record for a product at a location.
-        Date format YYYY-MM-DD. Defaults to today.
-        """
-        if not date:
-            date = datetime.datetime.now().strftime("%Y-%m-%d")
-
-        if location not in self.market_prices:
-            self.market_prices[location] = {}
-        if product_name not in self.market_prices[location]:
-            self.market_prices[location][product_name] = []
-
-        self.market_prices[location][product_name].append({
-            "date": date,
-            "price": price
-        })
-        self.save_prices()
+    def add_new_crop(self, crop_type, price):
+        """Add a new crop with its price"""
+        prices = self.get_market_prices()
+        prices[crop_type] = price
+        write_json(self.market_prices_file, prices)

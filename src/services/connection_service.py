@@ -1,58 +1,89 @@
 # connection service search farmers, contact sharing
 
-from src.utils.data_handler import read_json, write_json
-
-CONNECTIONS_FILE = "data/connections.json"
+import uuid
+from datetime import datetime
+from utils.data_handler import read_json, write_json
 
 class ConnectionService:
-    def __init__(self, user_service):
-        """
-        user_service: Instance of UserService to access farmer data.
-        """
-        self.user_service = user_service
-        self.connections = self.load_connections()
+    def __init__(self):
+        self.connections_file = "data/connections.json"
 
-    def load_connections(self):
-        return read_json(CONNECTIONS_FILE)
+    def create_connection(self, buyer, farmer_phone, crop_type, quantity, asking_price):
+        """Create a connection between buyer and farmer"""
+        connection_id = str(uuid.uuid4())
+        connection_data = {
+            "connection_id": connection_id,
+            "buyer_phone": buyer.phone_number,
+            "buyer_name": buyer.name,
+            "farmer_phone": farmer_phone,
+            "crop_type": crop_type,
+            "quantity": quantity,
+            "asking_price": asking_price,
+            "status": "pending",
+            "created_date": datetime.now().strftime("%Y-%m-%d"),
+            "total_value": quantity * asking_price
+        }
+        
+        # Load existing connections
+        connections = read_json(self.connections_file)
+        if not connections:
+            connections = {}
+        
+        connections[connection_id] = connection_data
+        write_json(self.connections_file, connections)
+        
+        return connection_data
 
-    def save_connections(self):
-        write_json(CONNECTIONS_FILE, self.connections)
+    def get_buyer_connections(self, buyer_phone):
+        """Get all connections for a specific buyer"""
+        connections = read_json(self.connections_file)
+        if not connections:
+            return []
+        
+        return [conn for conn in connections.values() 
+                if conn.get("buyer_phone") == buyer_phone]
 
-    def search_farmers(self, location=None, product_name=None):
-        """
-        Search farmers by location and/or primary crops.
-        Returns list of Farmer objects matching criteria.
-        """
-        results = []
-        for user in self.user_service.users.values():
-            if user.get_role() != "Farmer":
-                continue
-            if location and user.location.lower() != location.lower():
-                continue
-            if product_name and product_name.lower() not in (crop.lower() for crop in user.primary_crops):
-                continue
-            results.append(user)
-        return results
+    def get_farmer_connections(self, farmer_phone):
+        """Get all connections for a specific farmer"""
+        connections = read_json(self.connections_file)
+        if not connections:
+            return []
+        
+        return [conn for conn in connections.values() 
+                if conn.get("farmer_phone") == farmer_phone]
 
-    def get_farmer_contact(self, farmer_id):
-        """
-        Returns farmer's phone number if exists.
-        """
-        farmer = self.user_service.users.get(farmer_id)
-        if farmer and farmer.get_role() == "Farmer":
-            return farmer.phone
-        return None
+    def update_connection_status(self, connection_id, status):
+        """Update the status of a connection"""
+        connections = read_json(self.connections_file)
+        if connection_id in connections:
+            connections[connection_id]["status"] = status
+            connections[connection_id]["updated_date"] = datetime.now().strftime("%Y-%m-%d")
+            write_json(self.connections_file, connections)
+            return True
+        return False
 
-    def record_connection(self, buyer_id, farmer_id):
-        """
-        Log a connection between buyer and farmer.
-        """
-        if buyer_id not in self.connections:
-            self.connections[buyer_id] = []
-        if farmer_id not in self.connections[buyer_id]:
-            self.connections[buyer_id].append(farmer_id)
-            self.save_connections()
+    def get_connection_by_id(self, connection_id):
+        """Get a specific connection by ID"""
+        connections = read_json(self.connections_file)
+        return connections.get(connection_id)
 
+    def get_pending_connections(self, farmer_phone):
+        """Get pending connections for a farmer"""
+        connections = read_json(self.connections_file)
+        if not connections:
+            return []
+        
+        return [conn for conn in connections.values() 
+                if conn.get("farmer_phone") == farmer_phone and conn.get("status") == "pending"]
 
-    
+    def accept_connection(self, connection_id):
+        """Accept a connection request"""
+        return self.update_connection_status(connection_id, "accepted")
 
+    def reject_connection(self, connection_id):
+        """Reject a connection request"""
+        return self.update_connection_status(connection_id, "rejected")
+
+    def complete_connection(self, connection_id):
+        """Mark a connection as completed"""
+        return self.update_connection_status(connection_id, "completed")

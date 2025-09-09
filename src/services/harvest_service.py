@@ -1,51 +1,92 @@
 # Harvest service harvest recording, inventory tracking
 
 import uuid
-from src.utils.data_handler import read_json, write_json
-from src.models.harvest import Harvest
+from datetime import datetime
+from utils.data_handler import read_json, write_json
+from models.harvest import Harvest
 
 HARVESTS_FILE = "data/harvests.json"
 
 class HarvestService:
     def __init__(self):
-        self.harvests = self.load_harvests()
+        self.harvests_file = HARVESTS_FILE
 
-    def load_harvests(self):
-        data = read_json(HARVESTS_FILE)
-        harvests = {}
-        for h_id, h_data in data.items():
-            harvest = Harvest(
-                harvest_id=h_id,
-                farmer_id=h_data["farmer_id"],
-                product_id=h_data["product_id"],
-                quantity=h_data["quantity"],
-                quality=h_data["quality"],
-                asking_price=h_data["asking_price"],
-                date=h_data["date"]
-            )
-            harvests[h_id] = harvest
-        return harvests
-    
-    def save_harvests(self):
-        data = {h_id: harvest.get_summary() for h_id, harvest in self.harvests.items()}
-        write_json(HARVESTS_FILE, data)
+    def create_harvest(self, farmer, crop_type, quantity, harvest_date, asking_price):
+        """Create a new harvest listing"""
+        harvest_id = str(uuid.uuid4())
+        harvest_data = {
+            "harvest_id": harvest_id,
+            "farmer_phone": farmer.phone_number,
+            "farmer_name": farmer.name,
+            "farmer_location": farmer.location,
+            "crop_type": crop_type,
+            "quantity": quantity,
+            "harvest_date": harvest_date,
+            "asking_price": asking_price,
+            "created_date": datetime.now().strftime("%Y-%m-%d"),
+            "status": "available"
+        }
+        
+        # Load existing harvests
+        harvests = read_json(self.harvests_file)
+        if not harvests:
+            harvests = {}
+        
+        harvests[harvest_id] = harvest_data
+        write_json(self.harvests_file, harvests)
+        
+        return harvest_data
 
-    def record_harvest(self, farmer_id, product_id, quantity, quality, asking_price, data):
-        harvest_id =str(uuid.uuid4())
-        new_harvest=Harvest(harvest_id,farmer_id, product_id, quantity, asking_price, data)
-        self.harvests[harvest_id]=new_harvest
-        self.save_harvests()
-        return new_harvest
-    
-    def get_inventory_by_format(self, farmer_id):
-        """
-        Returns all harvest entries for a famer.
-        """
-        return[h for h in self.harvest.values() if h.farmer_id==farmer_id]
-    
-    def get_all_inventory(self):
-        """
-        Returns all harvest entries.
-        """
-        return list(self.harvests.values())
+    def get_all_listings(self):
+        """Get all available harvest listings"""
+        harvests = read_json(self.harvests_file)
+        if not harvests:
+            return []
+        
+        # Filter only available listings
+        return [harvest for harvest in harvests.values() if harvest.get("status") == "available"]
+
+    def get_farmer_listings(self, farmer_phone):
+        """Get all listings for a specific farmer"""
+        harvests = read_json(self.harvests_file)
+        if not harvests:
+            return []
+        
+        return [harvest for harvest in harvests.values() 
+                if harvest.get("farmer_phone") == farmer_phone and harvest.get("status") == "available"]
+
+    def search_by_crop(self, crop_type):
+        """Search listings by crop type"""
+        all_listings = self.get_all_listings()
+        return [listing for listing in all_listings 
+                if listing.get("crop_type", "").lower() == crop_type.lower()]
+
+    def search_by_location(self, location):
+        """Search listings by farmer location"""
+        all_listings = self.get_all_listings()
+        return [listing for listing in all_listings 
+                if location.lower() in listing.get("farmer_location", "").lower()]
+
+    def get_harvest_by_id(self, harvest_id):
+        """Get a specific harvest by ID"""
+        harvests = read_json(self.harvests_file)
+        return harvests.get(harvest_id)
+
+    def update_harvest_status(self, harvest_id, status):
+        """Update the status of a harvest listing"""
+        harvests = read_json(self.harvests_file)
+        if harvest_id in harvests:
+            harvests[harvest_id]["status"] = status
+            write_json(self.harvests_file, harvests)
+            return True
+        return False
+
+    def remove_harvest(self, harvest_id):
+        """Remove a harvest listing"""
+        harvests = read_json(self.harvests_file)
+        if harvest_id in harvests:
+            del harvests[harvest_id]
+            write_json(self.harvests_file, harvests)
+            return True
+        return False
     

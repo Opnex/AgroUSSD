@@ -1,0 +1,14 @@
+{
+    "d4b61f21-8a4c-45bd-a61d-2680a9f93e2b": {
+        "name": "Thomas Ope",
+        "phone": "08188065483",
+        "location": "Ijebu Ode",
+        "pin": "5454",
+        "role": "Farmer",
+        "farm_name": "Opnex-Farm",
+        "farm_size": 100000.0,
+        "primary_crops": [
+            "fruits"
+        ]
+    }
+}

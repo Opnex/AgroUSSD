@@ -8,6 +8,7 @@ class Farmer(User):
         super().__init__(name, phone_number, pin, location)
         self.farm_name = farm_name
         self.farm_size = farm_size  # in acres
+        self.primary_crops = []  # List of primary crops
 
     def get_user_type(self):
         return "Farmer"
@@ -16,7 +17,7 @@ class Farmer(User):
         user_info = super().__str__()
         return f"{user_info}, Farm Name: {self.farm_name}, Farm Size: {self.farm_size} acres"
     
-    def update_farm_details(self, new_farm_name=None, new_farm_size=None):
+    def update_farm_details(self, new_farm_name=None, new_farm_size=None, new_primary_crops=None):
         if new_farm_name:
             self.farm_name = new_farm_name
             logger.info("Farm name updated to %s", self.farm_name)
@@ -25,6 +26,9 @@ class Farmer(User):
                 raise ValueError("Farm size must be a positive number.")
             self.farm_size = new_farm_size
             logger.info("Farm size updated to %s acres", self.farm_size)
+        if new_primary_crops is not None:
+            self.primary_crops = new_primary_crops
+            logger.info("Primary crops updated to %s", self.primary_crops)
 
     def validate_farm_size(self):
         if self.farm_size <= 0:
