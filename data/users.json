@@ -10,5 +10,45 @@
         "primary_crops": [
             "fruits"
         ]
+    },
+    "dad2f4fb-83f0-48cd-bd25-bff628e22fd3": {
+        "name": "Thomas Ope",
+        "phone": "08070488972",
+        "location": "ogun",
+        "pin": "1234",
+        "role": "Farmer",
+        "farm_name": "agro",
+        "farm_size": 30.0,
+        "primary_crops": [
+            "fruit"
+        ]
+    },
+    "fd50cca8-f9a2-4e28-8a47-8f97bd544bb4": {
+        "name": "vic",
+        "phone": "08188065483",
+        "location": "ogun",
+        "pin": "1234",
+        "role": "Buyer",
+        "preferred_payment_method": "Bank Transfer"
+    },
+    "3ccc98b7-fa8a-47db-a765-e37d91e52c10": {
+        "name": "Thomas Tuunde",
+        "phone": "08088065483",
+        "location": "ogun",
+        "pin": "1234",
+        "role": "Farmer",
+        "farm_name": "30",
+        "farm_size": 30.0,
+        "primary_crops": [
+            "fruit"
+        ]
+    },
+    "6bf67de2-21ac-4f64-ba49-969089b862d4": {
+        "name": "amope",
+        "phone": "08054388751",
+        "location": "lagos",
+        "pin": "1234",
+        "role": "Buyer",
+        "preferred_payment_method": "Bank Transfer"
     }
 }

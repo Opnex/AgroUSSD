@@ -45,7 +45,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\nExiting AgroUSSD...")
     except Exception as e:
-        print(f"\nAn error occurred: {str(e)}")
+        # print(f"\nAn error occurred: {str(e)}")1
         print("Exiting AgroUSSD...")
     
     print("Thank you for using AgroUSSD!")
